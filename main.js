@@ -9,17 +9,16 @@ if (cluster.isPrimary) {
 	const checkInterval = 100;
 	let batch = null;
 
-	// The task manager is created on the primary
-	// cluster to avoid multiple processes handling it.
-	// This centralized approach is way less trouble maker.
+	// The task manager runs only in the primary cluster
+	// to avoid race conditions by keeping state updates centralized.
 	cluster.on("message", function(worker, message, handle) {
 		if (message.type === "addTaskToQueue") {
 			pool.push(tasks.payments(message.data));
 		}
 	});
 
-	// Given an interval, we always check for new tasks
-	// added to the pool list and execute them in batches.
+	// Node.js handles TCP connections asynchronously and in parallel,
+	// so we can process I/O tasks without managing workers or threads.
 	setInterval(function() {
 		if (!batch && pool.length > 0) {
 			batch = Promise.all(pool.splice(0, batchSize)).then(() => {
