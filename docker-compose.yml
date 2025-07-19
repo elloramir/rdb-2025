@@ -1,0 +1,18 @@
+services:
+  web-server:
+    build: .
+
+    volumes:
+      - ./src:/app
+
+    networks:
+      - web-server-network
+      - payment-processor
+
+    ports:
+      - "9999:9999"
+
+networks:
+  payment-processor:
+    external: true
+  web-server-network:
